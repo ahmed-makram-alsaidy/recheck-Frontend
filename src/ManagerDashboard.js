@@ -1,5 +1,6 @@
 // src/ManagerDashboard.js
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react'; // 1. استيراد useCallback
 import { getManagerDashboardData, searchShipment, addEmployee, deleteEmployee } from './api';
 
 function ManagerDashboard({ user, onLogout }) {
@@ -17,32 +18,40 @@ function ManagerDashboard({ user, onLogout }) {
   const [searchResult, setSearchResult] = useState(null);
   const [searchError, setSearchError] = useState('');
 
-  // دالة لجلب البيانات عند تحميل المكون
-  const fetchData = async () => {
+  // 2. تغليف دالة fetchData بـ useCallback
+  // هذا يضمن أن الدالة لا يتم إعادة إنشائها إلا إذا تغير user.access_token
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(''); // إعادة تعيين أي خطأ سابق
       const response = await getManagerDashboardData(user.access_token);
       setEmployees(response.data);
     } catch (err) {
       setError('فشل في تحميل بيانات الموظفين.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.access_token]); // التبعية الوحيدة للدالة
 
+  // 3. استخدام fetchData في useEffect وإضافتها إلى قائمة التبعيات
   useEffect(() => {
     fetchData();
-  }, [user.access_token]);
+  }, [fetchData]); // الآن التحذير سيختفي
 
   const handleAddEmployee = async (e) => {
     e.preventDefault();
+    if (!newName || !newUsername || !newPassword) {
+      alert('الرجاء ملء جميع حقول الموظف.');
+      return;
+    }
     try {
       await addEmployee({ name: newName, username: newUsername, password: newPassword }, user.access_token);
       // مسح الحقول وتحديث القائمة
       setNewName('');
       setNewUsername('');
       setNewPassword('');
-      fetchData(); 
+      fetchData(); // استدعاء الدالة لتحديث البيانات
     } catch (err) {
       alert('فشل في إضافة الموظف. قد يكون اسم المستخدم موجودًا بالفعل.');
     }
@@ -150,7 +159,3 @@ function ManagerDashboard({ user, onLogout }) {
 }
 
 export default ManagerDashboard;
-
-
-
-
