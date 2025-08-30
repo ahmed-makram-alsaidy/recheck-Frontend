@@ -1,25 +1,38 @@
-import logo from './logo.svg';
+// src/App.js
+import React, { useState } from 'react';
 import './App.css';
+import LoginScreen from './LoginScreen';
+import OwnerDashboard from './OwnerDashboard';
+import ManagerDashboard from './ManagerDashboard';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const [user, setUser] = useState(null);
+
+  const handleLoginSuccess = (userData) => {
+    // حفظ بيانات المستخدم في الحالة
+    setUser(userData);
+  };
+  
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  // عرض الواجهة المناسبة بناءً على حالة تسجيل الدخول ودور المستخدم
+  if (!user) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  switch (user.user_role) {
+    case 'owner':
+      return <OwnerDashboard user={user} onLogout={handleLogout} />;
+    case 'manager':
+      return <ManagerDashboard user={user} onLogout={handleLogout} />;
+    // يمكنك إضافة حالة الموظف هنا
+    // case 'employee':
+    //   return <EmployeeDashboard user={user} onLogout={handleLogout} />;
+    default:
+      return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
 }
 
 export default App;
